@@ -1,6 +1,9 @@
 <html lang="en">
+ <!-- xmlns="https://www.w3.org/1999/xhtml"> -->
 <head>
   <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <meta name="description" content="SeNaVi test version">
   <script type='text/javascript' src='js/moment.js'></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://js.api.here.com/v3/3.0/mapsjs-core.js"
@@ -126,7 +129,8 @@
       // Initialize the platform object:
       platform = new H.service.Platform({
         'app_id': 'JspQeegDoD5GRq04Ne6E',
-        'app_code': 'K8PmWpmNJ2wE2bAdv4TUhg'
+        'app_code': 'K8PmWpmNJ2wE2bAdv4TUhg',
+        useHTTPS: true
       });
       // set position for irvine..
       irvine = {lat: 33.6735095, lng: -117.7847156};  // orientation
