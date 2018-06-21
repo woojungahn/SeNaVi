@@ -1,0 +1,398 @@
+<html>
+<head>
+  <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+  <script src="http://js.api.here.com/v3/3.0/mapsjs-core.js"
+    type="text/javascript" charset="utf-8"></script>
+  <script src="http://js.api.here.com/v3/3.0/mapsjs-service.js"
+    type="text/javascript" charset="utf-8"></script>
+  <script src="http://js.api.here.com/v3/3.0/mapsjs-mapevents.js"
+    type="text/javascript" charset="utf-8"></script>
+  <script src="http://js.api.here.com/v3/3.0/mapsjs-ui.js"
+    type="text/javascript" charset="utf-8"></script>
+  <link rel="stylesheet" type="text/css"
+    href="http://js.api.here.com/v3/3.0/mapsjs-ui.css" />
+  <script type="text/javascript" src="http://maps.google.com/maps/api/js?libraries=geometry&sensor=false&language=en&key=AIzaSyBHE9riq3fR5AsnAbEebsbYrTXrF6qzHqk"></script>
+  <title>SeNaVi Web v1.3</title>
+</head>
+<body>
+  <p>cursor: <span id="cursor"></span></p>
+  <br>
+  <input type="file" id="fileToLoad"><button onclick="loadGMapRoute()">Load GMap Route</button>
+  <div style="width: 100%; height: 90%" id="mapContainer"></div>
+  <script>
+
+    var platform;
+    var irvine;
+    var maptypes;
+    var map;
+    var svgMarkup;
+    var icon;
+    var mapEvents;
+    var behavior;
+    var pointRouteFirst = { lat: 52.5309825, lng: 13.3845921 };
+    var ui;
+    var jsonStringGMapRoute;
+    var jsonGMapRoute;
+    var bDrawGMapRoute = true;
+    var bDrawHereRoute = true;
+
+    initMap();
+
+
+
+    function initMap() {
+      // Initialize the platform object:
+      platform = new H.service.Platform({
+      'app_id': 'JspQeegDoD5GRq04Ne6E',
+      'app_code': 'K8PmWpmNJ2wE2bAdv4TUhg'
+      });
+
+      // set position for irvine..
+      irvine = {lat: 33.6735095, lng: -117.7847156};  // orientation
+
+      // Obtain the default map types from the platform object
+      maptypes = platform.createDefaultLayers();
+
+      // Instantiate (and display) a map object:
+      map = new H.Map(
+      document.getElementById('mapContainer'),
+      maptypes.normal.map,
+      // maptypes.satellite.map,
+      {
+        zoom: 10,
+        center: irvine
+      });
+
+      // Create a group that can hold map objects:
+      group = new H.map.Group();
+      // Add the group to the map object (created earlier):
+      map.addObject(group);
+      // Create a marker:
+      var marker = new H.map.Marker(irvine);
+      marker.draggable = true;
+
+      // Add the marker to the group (which causes
+      // it to be displayed on the map)
+      group.addObject(marker);
+
+      // // Define a variable holding SVG mark-up that defines an icon image:
+      // svgMarkup = '<svg width="24" height="24" ' +
+      //   'xmlns="http://www.w3.org/2000/svg">' +
+      //   '<rect stroke="white" fill="#1b468d" x="1" y="1" width="22" ' +
+      //   'height="22" /><text x="12" y="18" font-size="12pt" ' +
+      //   'font-family="Arial" font-weight="bold" text-anchor="middle" ' +
+      //   'fill="white">I</text></svg>';
+      // // Create an icon, an object holding the latitude and longitude, and a marker:
+      // icon = new H.map.Icon(svgMarkup),
+      //   coords = irvine,
+      //   marker = new H.map.Marker(coords, {icon: icon});
+      // // Add the marker to the map and center the map at the location of the marker:
+      // map.addObject(marker);
+
+      drawMarker('#0000FF','P',irvine);
+
+      // Enable the event system on the map instance:
+      mapEvents = new H.mapevents.MapEvents(map);
+
+      // Add event listener:
+      map.addEventListener('tap', listenerTabEvent);
+      map.addEventListener('pointerdown', listenerPointerDownEvent);
+      map.addEventListener('pointermove', listenerPointerMoveEvent);
+      map.addEventListener('dragstart', listenerDragStartEvent,false);
+      map.addEventListener('dragend', listenerDragEndEvent,false);
+      map.addEventListener('drag', listenerDragEvent,false);
+
+
+
+
+
+      // Instantiate the default behavior, providing the mapEvents object:
+      behavior = new H.mapevents.Behavior(mapEvents);
+
+      // Create the default UI:
+      ui = H.ui.UI.createDefault(map, maptypes, 'en-US');
+      // // setup UI
+      // var mapSettings = ui.getControl('mapsettings');
+      // var zoom = ui.getControl('zoom');
+      // var scalebar = ui.getControl('scalebar');
+      // var panorama = ui.getControl('panorama');
+      // panorama.setAlignment('top-left');
+      // mapSettings.setAlignment('top-left');
+      // zoom.setAlignment('top-left');
+      // scalebar.setAlignment('top-left');
+      // // Create an info bubble object at a specific geographic location:
+      // var bubble = new H.ui.InfoBubble(irvine, {content: '<b>SeNaVi</b>'});
+      // // Add info bubble to the UI:
+      // ui.addBubble(bubble);
+    }
+
+
+    function listenerTabEvent(evt) {
+      var target = evt.target;
+      var pointer = evt.currentPointer;
+      var geoPoint = map.screenToGeo(pointer.viewportX, pointer.viewportY);
+      // var marker = new H.map.Marker(geoPoint);
+      // marker.draggable = true;
+      // map.addObject(marker);
+    }
+
+    function listenerPointerDownEvent(evt) {
+      var target = evt.target;
+      var pointer = evt.currentPointer;
+      var geoPoint = map.screenToGeo(pointer.viewportX, pointer.viewportY);
+      // var marker = new H.map.Marker(geoPoint);
+      // marker.draggable = true;
+      // map.addObject(marker);
+    }
+
+    function listenerPointerMoveEvent(evt) {
+      var target = evt.target;
+      var pointer = evt.currentPointer;
+      var geoPoint = map.screenToGeo(pointer.viewportX, pointer.viewportY);
+      document.getElementById('cursor').innerHTML = '\(' + geoPoint.lat + '\,' + geoPoint.lng + '\)';
+    }
+
+    function listenerDragStartEvent(evt) {
+      var target = evt.target;
+      if (target instanceof H.map.Marker) {
+        behavior.disable();
+      }
+    }
+
+
+    // re-enable the default draggability of the underlying map
+    // when dragging has completed
+    function listenerDragEndEvent(evt) {
+      var target = evt.target;
+      if (target instanceof mapsjs.map.Marker) {
+        behavior.enable();
+      }
+    }
+
+    // Listen to the drag event and move the position of the marker
+    // as necessary
+    function listenerDragEvent(evt) {
+      var target = evt.target;
+      var pointer = evt.currentPointer;
+      var geoPoint = map.screenToGeo(pointer.viewportX, pointer.viewportY);
+      if (target instanceof mapsjs.map.Marker) {
+        target.setPosition(geoPoint);
+        document.getElementById('cursor').innerHTML = '\(' + geoPoint.lat + '\,' + geoPoint.lng + '\)';
+      }
+    }
+
+    // Define a callback function to error occured
+    function callbackError(error) {
+        alert(error.message);
+    }
+
+    // Define a callback function to process the routing response:
+    function callbackSuccess(result) {
+      var route;
+      var routeShape;
+      var startPoint;
+      var endPoint;
+      var linestring;
+
+      if(result.response.route) {
+
+        // Pick the first route from the response:
+        route = result.response.route[0];
+        // console.log(route);
+        var json = JSON.stringify(route);
+        console.log("route by here");
+        console.log(json);
+        download("route_by_here.json",json);
+
+        // Pick the route's shape:
+        routeShape = route.shape;
+
+        // Create a linestring to use as a point source for the route line
+        linestring = new H.geo.LineString();
+
+        // Push all the points in the shape into the linestring:
+        routeShape.forEach(function(point) {
+          var parts = point.split(',');
+          linestring.pushLatLngAlt(parts[0], parts[1]);
+        });
+
+        // Retrieve the mapped positions of the requested waypoints:
+        startPoint = route.waypoint[0].mappedPosition;
+        endPoint = route.waypoint[route.waypoint.length-1].mappedPosition;
+
+        // Create a polyline to display the route:
+        var routeLine = new H.map.Polyline(linestring, {
+          style: { strokeColor: 'blue', lineWidth: 10, strokeColor: 'Blue'  }
+        });
+
+        route.waypoint.forEach(function(point) {
+          var mappedMarker = new H.map.Marker({
+            lat: point.mappedPosition.latitude,
+            lng: point.mappedPosition.longitude
+          });
+          map.addObject(mappedMarker);
+          var originalMarker = new H.map.Marker({
+            lat: point.mappedPosition.latitude,
+            lng: point.mappedPosition.longitude
+          });
+          map.addObject(originalMarker);
+        });
+
+        // // Create a marker for the start point:
+        // var startMarker = new H.map.Marker({
+        //   lat: startPoint.latitude,
+        //   lng: startPoint.longitude
+        // });
+        //
+        // // Create a marker for the end point:
+        // var endMarker = new H.map.Marker({
+        //   lat: endPoint.latitude,
+        //   lng: endPoint.longitude
+        // });
+
+        // Add the route polyline and the two markers to the map:
+        // map.addObjects([routeLine, startMarker, endMarker]);
+        if(bDrawHereRoute) map.addObjects([routeLine]);
+        // Set the map's viewport to make the whole route visible:
+        map.setViewBounds(routeLine.getBounds());
+
+        drawGMapRoute();
+      }
+    }
+
+    function drawGMapRoute() {
+
+      if(!bDrawGMapRoute) return;
+
+      var linestring = new H.geo.LineString();
+
+      for(var j=0;j<jsonGMapRoute.routes["0"].legs.length;j++) {
+  			for(var i=0;i<jsonGMapRoute.routes["0"].legs[j].steps.length;i++) {
+
+          var decode = google.maps.geometry.encoding.decodePath(jsonGMapRoute.routes["0"].legs[j].steps[i].polyline.points);
+          // console.log(jsonGMapRoute.routes["0"].legs[j].steps[i].polyline.points);
+          // console.log(decode);
+          // console.log('decode = ' + decode);
+
+          var ddd;
+          ddd = ''+decode;
+          ddd = ddd.replace(/\(/g,'');
+          ddd = ddd.replace(/\)/g,'');
+
+          var aPos = ddd.split(',');
+          // console.log(aPos);
+          for(var k=0;k<aPos.length;k+=2) {
+            var point = {
+              lat: aPos[k],
+              lng: aPos[k+1]
+            };
+            linestring.pushPoint(point);
+          }
+        }
+      }
+
+      // console.log(linestring);
+      var polyline = new H.map.Polyline(linestring, { style: { lineWidth: 5, strokeColor: 'Red' }});
+      map.addObject(polyline);
+
+    }
+
+    function loadGMapRoute()
+    {
+      var fileToLoad = document.getElementById("fileToLoad").files[0];
+      console.log('fileToLoad' + fileToLoad);
+      var fileReader = new FileReader();
+      fileReader.onload = function(fileLoadedEvent)
+      {
+        jsonStringGMapRoute = fileLoadedEvent.target.result;
+        console.log("load from gmap");
+        console.log(jsonStringGMapRoute);
+        Route();
+      };
+      fileReader.readAsText(fileToLoad, "UTF-8");
+    }
+
+
+    function Route() {
+      // Get an instance of the routing service:
+      var router = platform.getRoutingService();
+      var routingParameters = {};
+      routingParameters.mode = 'shortest;car;traffic:disabled';
+      // routingParameters.mode = 'fastest;car;traffic:disabled';
+      routingParameters.representation = 'display';//'display;turnByTurn;overview;navigation';
+      routingParameters.metricSystem = 'metric';
+      routingParameters.language = 'en-us';
+
+      jsonGMapRoute = JSON.parse(jsonStringGMapRoute);
+      // console.log(jsonGMapRoute);
+
+      var iPoint = 0;
+  		for(var j=0;j<jsonGMapRoute.routes["0"].legs.length;j++) {
+  			for(var i=0;i<jsonGMapRoute.routes["0"].legs[j].steps.length;i++) {
+          var pStart = jsonGMapRoute.routes["0"].legs[j].steps[i].start_location;
+          var pEnd = jsonGMapRoute.routes["0"].legs[j].steps[i].end_location;
+          if(i==0 && j==0) {
+            routingParameters["waypoint"+iPoint] = 'geo!'+ pStart.lat + ',' + pStart.lng;
+            console.log('waypoint'+iPoint+' : ',j,i,'start','geo',pStart.lat,pStart.lng)
+            iPoint++;
+          }
+  				else if(i==(jsonGMapRoute.routes["0"].legs[j].steps.length-1) && j==(jsonGMapRoute.routes["0"].legs.length-1)) {
+            routingParameters["waypoint"+iPoint] = 'passThrough!'+ pStart.lat + ',' + pStart.lng;
+            console.log('waypoint'+iPoint+' : ',j,i,'start','passThrough',pStart.lat,pStart.lng)
+            iPoint++;
+            routingParameters["waypoint"+iPoint] = 'geo!'+ pEnd.lat + ',' + pEnd.lng;
+            console.log('waypoint'+iPoint+' : ',j,i,'end','geo',pEnd.lat,pEnd.lng)
+            iPoint++;
+          }
+          else {
+            routingParameters["waypoint"+iPoint] = 'passThrough!'+ pStart.lat + ',' + pStart.lng;
+            console.log('waypoint'+iPoint+' : ',j,i,'start','passThrough',pStart.lat,pStart.lng)
+            iPoint++;
+          }
+
+  			}
+  		}
+      // console.log(routingParameters);
+
+      router.calculateRoute(routingParameters, callbackSuccess, callbackError);
+    }
+
+
+    function download(filename, text) {
+  	  var element = document.createElement('a');
+  	  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  	  element.setAttribute('download', filename);
+  	  element.style.display = 'none';
+  	  document.body.appendChild(element);
+  	  element.click();
+  	  document.body.removeChild(element);
+  	}
+
+    function drawMarker(color,text,coord) {
+      var svgMarkup = '<svg style="left:-14px;top:-36px;"' +
+            'xmlns="http://www.w3.org/2000/svg" width="28px" height="36px" >' +
+            '<path d="M 19 31 C 19 32.7 16.3 34 13 34 C 9.7 34 7 32.7 7 31 C 7 29.3 9.7 ' +
+            '28 13 28 C 16.3 28 19 29.3 19 31 Z" fill="#000" fill-opacity=".2"></path>' +
+            '<path d="M 13 0 C 9.5 0 6.3 1.3 3.8 3.8 C 1.4 7.8 0 9.4 0 12.8 C 0 16.3 1.4 ' +
+            '19.5 3.8 21.9 L 13 31 L 22.2 21.9 C 24.6 19.5 25.9 16.3 25.9 12.8 C 25.9 9.4 24.6 ' +
+            '6.1 22.1 3.8 C 19.7 1.3 16.5 0 13 0 Z" fill="#fff"></path>' +
+            '<path d="M 13 2.2 C 6 2.2 2.3 7.2 2.1 12.8 C 2.1 16.1 3.1 18.4 5.2 20.5 L ' +
+            '13 28.2 L 20.8 20.5 C 22.9 18.4 23.8 16.2 23.8 12.8 C 23.6 7.07 20 2.2 ' +
+            '13 2.2 Z" fill="${COLOR}"></path>' +
+            '<text transform="matrix( 1 0 0 1 13 18 )" x="0" y="0" fill-opacity="1" ' +
+            'fill="#fff" text-anchor="middle" ' +
+            'font-weight="bold" font-size="13px" font-family="arial">${TEXT}</text></svg>';
+
+      // console.log(svgMarkup.replace('${COLOR}', color).replace('${TEXT}',text));
+      var parisIcon = new H.map.Icon(svgMarkup.replace('${COLOR}', color).replace('${TEXT}',text));
+      var parisMarker = new H.map.Marker(coord,{icon: parisIcon});
+      // var parisIcon = new H.map.Icon(
+      //   svgMarkup.replace('${COLOR}', 'blue').replace('${TEXT}', 'P')),
+      //   parisMarker = new H.map.Marker({lat: 33.6735095, lng: -117.7847156 },
+      //     {icon: parisIcon});
+      map.addObject(parisMarker);
+
+    }
+  </script>
+</body>
+</html>
